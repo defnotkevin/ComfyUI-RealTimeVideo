@@ -11,8 +11,8 @@ def settings(value):
     if not isinstance(value, dict):
         raise ValueError('Settings must be an object')
     backend = value.get('backend', 'krea')
-    if backend not in ('krea', 'ltx'):
-        raise ValueError('Backend must be krea or ltx')
+    if backend not in ('krea', 'ltx', 'ltx25'):
+        raise ValueError('Backend must be krea, ltx or ltx25')
     fps = value.get('fps', 12)
     if type(fps) is not int or not 2 <= fps <= 30:
         raise ValueError('FPS must be an integer from 2 to 30')

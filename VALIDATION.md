@@ -49,3 +49,25 @@ The GPU installation and smoke test are documented in README.md. Model-dependent
   weights were downloaded locally. 5090 memory fit, FPS, motion fidelity, and
   inter-window consistency remain unverified. Use the documented LTX GPU smoke
   test, then live video. Fake-inference tests do not validate generated quality.
+
+## Native LTX-2.5 backend — 2026-10-27
+
+- CPU suite: 40 tests discovered; 39 passed and the native-runtime-only test
+  skipped in the lightweight environment. That remaining test passed separately
+  with installed official native LTX packages and real Torch 2.8 CPU tensors.
+- Native test covers input normalization/layout, prompt-cache invalidation,
+  matching source-noise scale to the schedule, the previous-frame anchor,
+  video-only modality, ancestral-loop API and decoded chunk concatenation.
+  Model blocks are doubles: this does not validate pretrained model inference.
+- Downloader tests verify pinned revisions, successful size/hash validation,
+  and refusal to publish runtime config after a checksum mismatch.
+- Installed native source revision e98f6d927d83c92ef2be6aec76c8440b19306e39
+  imports successfully with Transformers 5.14.1 / Torch 2.8 / safetensors 0.8.
+  Local macOS API check omits upstream's macOS-only mps-sdpa dependency because
+  it requires Torch >=2.11; the supported installer targets Linux/CUDA and that
+  dependency's platform marker excludes it. No MPS inference was attempted.
+- Browser event smoke, JavaScript syntax, installer shell syntax and diff
+  whitespace checks pass. Krea and legacy-LTX regression tests remain passing.
+- No LTX-2.5 weights downloaded locally; no B200 or other GPU inference performed.
+  Linux installer completion, CUDA model loading, appearance/motion fidelity,
+  seam quality and generation speed remain to be tested on RunPod.

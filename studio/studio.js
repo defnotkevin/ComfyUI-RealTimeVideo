@@ -19,6 +19,13 @@ try {
         history.replaceState(null, '', location.pathname + location.search);
     }
 } catch { status('Could not read workflow settings; using defaults.'); }
+function backendControls() {
+    const native = $('backend').value === 'ltx25';
+    $('steps').disabled = native;
+    if (native) $('steps').value = 8;
+}
+$('backend').onchange = backendControls;
+backendControls();
 $('strength-value').value = Number($('strength').value).toFixed(2);
 $('strength').oninput = () => { $('strength-value').value = Number($('strength').value).toFixed(2); };
 function releaseSource() {
@@ -125,7 +132,7 @@ $('start').onclick = () => {
                     output.width = msg.width || 832; output.height = msg.height || 480;
                     output.style.aspectRatio = `${output.width}/${output.height}`;
                     $('gpu').textContent = `${active.backend.toUpperCase()} · ${msg.gpu} · ${msg.vram_gib} GiB`;
-                    status(active.backend === 'ltx' ? 'LTX experimental chunks: waiting for first output. Speed and continuity are not guaranteed.' : 'Streaming. Waiting for the first generated block; kernel compilation may take several minutes.');
+                    status(active.backend !== 'krea' ? 'LTX experimental chunks: waiting for first output. Speed and continuity are not guaranteed.' : 'Streaming. Waiting for the first generated block; kernel compilation may take several minutes.');
                     timer = setInterval(sample, 1000 / fps);
                     playbackTimer = setInterval(() => { const frame = outputs.shift(); if (frame) out.drawImage(frame, 0, 0, output.width, output.height); }, 1000 / fps);
                 }

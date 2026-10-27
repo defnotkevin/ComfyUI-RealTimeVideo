@@ -101,7 +101,10 @@ class Engine:
 def main():
     transport = sys.stdout
     backend = sys.argv[2] if len(sys.argv) > 2 else 'krea'
-    if backend == 'ltx':
+    if backend == 'ltx25':
+        from ltx25_worker import LTX25Engine
+        engine = LTX25Engine(sys.argv[1])
+    elif backend == 'ltx':
         from ltx_worker import LTXEngine
         engine = LTXEngine(sys.argv[1])
     elif backend == 'krea':

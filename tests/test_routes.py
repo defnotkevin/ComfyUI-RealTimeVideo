@@ -75,10 +75,10 @@ class RouteTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_ltx_selection_and_mid_session_switch_denied(self):
         ws = await self.connect()
-        await ws.send_json({'op': 'start', 'settings': {'prompt': 'test', 'backend': 'ltx'}})
+        await ws.send_json({'op': 'start', 'settings': {'prompt': 'test', 'backend': 'ltx25'}})
         self.assertEqual((await ws.receive_json())['type'], 'loading')
         self.assertEqual((await ws.receive_json())['type'], 'ready')
-        self.assertEqual(self.fake.backend, 'ltx')
+        self.assertEqual(self.fake.backend, 'ltx25')
         await ws.send_json({'op': 'reset', 'settings': {'prompt': 'test', 'backend': 'krea'}})
         self.assertIn('switching backend', (await ws.receive_json())['message'])
         await ws.receive()

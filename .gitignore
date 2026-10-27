@@ -20,3 +20,8 @@ SUBMISSION_CHECKLIST.txt
 runtime-ltx.json
 runtime-ltx-freeze.txt
 benchmark-ltx/
+.runtime-ltx25/
+.ltx25-source/
+runtime-ltx25.json
+runtime-ltx25-freeze.txt
+benchmark-ltx25/

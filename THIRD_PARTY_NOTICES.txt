@@ -34,3 +34,13 @@ Model license: LTX-Video-Open-Weights-License-0.X.txt in that repository (downlo
 Weights are not distributed in this repository. The model's license is separate
 from this project's MIT license. Inference uses the existing pinned Diffusers
 0.36.0 dependency and its LTXConditionPipeline; no Reactor service/code is used.
+
+Optional LTX-2.5 native backend:
+Source: https://github.com/Lightricks/LTX-2
+Pinned source revision: e98f6d927d83c92ef2be6aec76c8440b19306e39
+Model: https://huggingface.co/Lightricks/LTX-2.5
+Pinned model revision: 49b093a39c19169a8a81721dcc541e07e945232f
+The installer checks out official source with its LICENSE / LICENSE-2 / LICENSE-2_x
+files. Model and bundled text-encoder licensing/access conditions are separate
+from this project's MIT license. Weights and native source are downloaded only
+on explicit installation and are excluded from Git. No Reactor code/service.

@@ -34,7 +34,7 @@ async def stream(request):
         logging.warning('Krea WebSocket rejected: browser origin does not match host/public origin. '
                         'Behind a proxy, set KREA_PUBLIC_ORIGIN to the exact Studio origin before starting ComfyUI.')
         raise web.HTTPForbidden(text='Krea origin rejected. Configure KREA_PUBLIC_ORIGIN on the ComfyUI process for your proxy.')
-    ws = web.WebSocketResponse(max_msg_size=MAX_MESSAGE, heartbeat=30, receive_timeout=120)
+    ws = web.WebSocketResponse(max_msg_size=MAX_MESSAGE, heartbeat=30, receive_timeout=900)
     await ws.prepare(request)
     try:
         manager.acquire()

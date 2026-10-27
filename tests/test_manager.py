@@ -51,6 +51,14 @@ for line in sys.stdin:
             self.assertEqual(self.manager.start('ltx')['op'], 'load')
             self.assertEqual(self.manager.process.args[-1], 'ltx')
 
+    def test_ltx25_runtime_marker_and_worker_selection(self):
+        (self.root / 'model/ltx25-models.json').write_text('{}')
+        config = self.root / 'runtime-ltx25.json'
+        config.write_text(json.dumps({'python': sys.executable, 'model': str(self.root / 'model'), 'offload': 'none'}))
+        with patch.dict(os.environ, {'LTX25_RUNTIME_CONFIG': str(config)}):
+            self.assertEqual(self.manager.start('ltx25')['op'], 'load')
+            self.assertEqual(self.manager.process.args[-1], 'ltx25')
+
     def test_timeout_terminates(self):
         self.manager.start()
         process = self.manager.process

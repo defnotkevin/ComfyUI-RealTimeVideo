@@ -17,6 +17,7 @@ class WorkerManager:
         self.lifecycle = threading.Lock()
         self.cancelled = threading.Event()
         self.process = None
+        self.backend = 'krea'
         self.log = None
         self.responses = None
 
@@ -30,22 +31,30 @@ class WorkerManager:
         self.lease.release()
 
     def start(self, backend="krea"):
-        if backend not in ("krea", "ltx"):
+        if backend not in ("krea", "ltx", "ltx25"):
             raise ValueError("Unknown backend")
-        config_path = Path(os.environ.get('LTX_RUNTIME_CONFIG' if backend == 'ltx' else 'KREA_RUNTIME_CONFIG', ROOT / ('runtime-ltx.json' if backend == 'ltx' else 'runtime.json')))
+        configs = {'krea': ('KREA_RUNTIME_CONFIG', 'runtime.json', 'modular_model_index.json'),
+                   'ltx': ('LTX_RUNTIME_CONFIG', 'runtime-ltx.json', 'model_index.json'),
+                   'ltx25': ('LTX25_RUNTIME_CONFIG', 'runtime-ltx25.json', 'ltx25-models.json')}
+        self.backend = backend
+        variable, filename, marker = configs[backend]
+        config_path = Path(os.environ.get(variable, ROOT / filename))
         if not config_path.is_file():
-            raise RuntimeError(f'{backend} runtime is not installed. Run scripts/install_ltx_runtime.sh for LTX or scripts/install_runtime.sh for Krea.')
+            installer = {'krea': 'install_runtime.sh', 'ltx': 'install_ltx_runtime.sh', 'ltx25': 'install_ltx25_runtime.sh'}[backend]
+            raise RuntimeError(f'{backend} runtime is not installed. Run scripts/{installer} on the GPU host.')
         config = json.loads(config_path.read_text())
         python = Path(config['python'])
         model = Path(config['model'])
-        if not python.is_file() or not (model / ('model_index.json' if backend == 'ltx' else 'modular_model_index.json')).is_file():
+        if not python.is_file() or not (model / marker).is_file():
             raise RuntimeError('Runtime paths are missing. Re-run the installer on this host.')
         env = os.environ.copy()
-        if backend == 'ltx':
-            mode = config.get('offload', 'model')
-            if mode not in ('model', 'sequential', 'none'):
-                raise ValueError('LTX offload must be model, sequential or none')
-            env['LTX_OFFLOAD'] = mode
+        if backend in ('ltx', 'ltx25'):
+            default = 'none' if backend == 'ltx25' else 'model'
+            mode = config.get('offload', default)
+            allowed = ('none', 'cpu', 'disk') if backend == 'ltx25' else ('model', 'sequential', 'none')
+            if mode not in allowed:
+                raise ValueError(f'{backend} offload must be one of {allowed}')
+            env['LTX25_OFFLOAD' if backend == 'ltx25' else 'LTX_OFFLOAD'] = mode
         env.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', DIFFUSERS_ENABLE_HUB_KERNELS='0', PYTHONUNBUFFERED='1', TOKENIZERS_PARALLELISM='false')
         with self.lifecycle:
             if self.cancelled.is_set():
@@ -73,7 +82,9 @@ class WorkerManager:
         threading.Thread(target=read, daemon=True).start()
         return self.call({'op': 'load'}, timeout=900)
 
-    def call(self, command, timeout=300):
+    def call(self, command, timeout=None):
+        if timeout is None:
+            timeout = 900 if self.backend == 'ltx25' else 300
         process, responses = self.process, self.responses
         if process is None or process.poll() is not None:
             raise RuntimeError('GPU worker is not running')

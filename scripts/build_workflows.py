@@ -38,3 +38,8 @@ config = node(1, 'RTVideoSettings', [30, 100], outputs=[socket('KREA_SETTINGS', 
 live = node(2, 'KreaRTLiveStudio', [450, 100], inputs=[socket('settings', 'KREA_SETTINGS', 1)], title='Realtime Video · Open Studio')
 note = node(3, 'Note', [30, 380], widgets=['Install scripts/install_ltx_runtime.sh on the GPU host first. Queue once, then open Live Studio. LTX uses experimental 512x320 video-conditioned chunks, with a previous-frame anchor. It is not a causal streaming model. Switch back to Krea after stopping. GPU speed and continuity require testing.'])
 save('03-ltx-live-camera.json', [config, live, note], [[1, 1, 0, 2, 0, 'KREA_SETTINGS']])
+
+config = node(1, 'RTVideoSettings', [30, 100], outputs=[socket('KREA_SETTINGS', 'KREA_SETTINGS', links=[1])], widgets=[prompt, 0.3, 8, 42, 'ltx25', 12])
+live = node(2, 'KreaRTLiveStudio', [450, 100], inputs=[socket('settings', 'KREA_SETTINGS', 1)], title='LTX-2.5 · Open Live Studio')
+note = node(3, 'Note', [30, 380], widgets=['Install scripts/install_ltx25_runtime.sh on the B200 first. Queue once, then open Live Studio. LTX-2.5 uses native 22B distilled weights with source-latent denoising at 768x448. Strength selects a suffix of the fixed eight-step noise schedule; the Steps widget is ignored for this backend. Experimental silent chunks, not guaranteed performance transfer or real-time speed. Krea and legacy LTX remain available.'])
+save('04-ltx25-live-camera.json', [config, live, note], [[1, 1, 0, 2, 0, 'KREA_SETTINGS']])

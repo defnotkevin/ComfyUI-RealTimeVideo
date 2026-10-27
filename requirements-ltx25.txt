@@ -1,0 +1,15 @@
+# Native LTX-2.5 runtime only; NEVER install into ComfyUI/Krea/legacy LTX envs.
+# Torch trio is installed separately from the CUDA 12.8 index.
+transformers==5.14.1
+safetensors==0.8.0
+accelerate==1.11.0
+numpy==2.2.6
+Pillow==12.0.0
+scipy==1.16.3
+einops==0.8.1
+sentencepiece==0.2.1
+cloudpickle==3.1.2
+av==16.0.1
+tqdm==4.67.1
+colour-science==0.4.6
+openimageio==3.1.8.0

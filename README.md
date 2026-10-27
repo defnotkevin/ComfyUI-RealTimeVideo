@@ -214,3 +214,76 @@ This moves smaller modules and may be much slower. The smoke test takes
 Read `worker.log` immediately after a failure; the next session overwrites it.
 The same origin protection applies to both backends. No new exposed worker port
 or third-party inference service is introduced.
+
+### LTX-2.5 on the B200 (new backend)
+
+Select **LTX-2.5** in Studio, or load `workflows/04-ltx25-live-camera.json`.
+Krea and legacy LTX 0.9.7 remain separate choices. This backend uses native
+Lightricks code, **LTX-2.5 22B distilled BF16**, the bundled Gemma 4 12B text
+encoder, and the LTX-2.5 convolutional video VAE. It does not load 0.9.7 weights.
+Source and model revisions are pinned in `realtime/ltx25_config.py`.
+
+After pushing/pulling these changes, install on the GPU host:
+
+```bash
+cd /workspace/ComfyUI/custom_nodes/ComfyUI-RealTimeVideo
+git pull --ff-only
+bash scripts/install_ltx25_runtime.sh
+```
+
+Use Python 3.11 (`LTX25_INSTALL_PYTHON` overrides the executable). This creates
+`.runtime-ltx25`, `.ltx25-source`, `models/ltx25` and `runtime-ltx25.json`, without
+changing ComfyUI, Krea or the legacy LTX environments. The native runtime needs
+Transformers 5.14.1 for Gemma 4, with its own compatible safetensors version.
+It uses Torch 2.8 / CUDA 12.8 without optional compiled kernels or quantization.
+The installer checks CUDA, imports, dependency consistency, and downloaded file
+sizes/SHA256 before publishing the runtime config. Allow space for roughly
+70 GB of model weights plus the runtime/cache, and adequate host RAM for cached
+weights. No weights or source checkout are committed to this project.
+
+If Hugging Face returns 401/403, review the LTX-2.5 access conditions yourself and
+authenticate privately in the new runtime (`.runtime-ltx25/bin/hf auth login`),
+then rerun the installer. Existing machine-wide Hugging Face authentication is
+normally reused. Never put an access token in a workflow or commit it.
+
+Restart ComfyUI with `KREA_PUBLIC_ORIGIN` set to your **new pod's** browser origin.
+The variable name remains unchanged and protects every backend. Refresh Studio,
+choose LTX-2.5, and start with 12 capture FPS and strength 0.3. Weights are loaded
+lazily on the first generated block, which can take substantially longer than
+later blocks; the session timeout allows up to 15 minutes per native LTX call.
+Stop still terminates the worker.
+
+Run a repeatable GPU smoke test first (replace the image path):
+
+```bash
+.runtime-ltx25/bin/python scripts/smoke_gpu.py \
+  --backend ltx25 --model models/ltx25 \
+  --image /workspace/ComfyUI/input/test.png --output benchmark-ltx25
+```
+
+The test saves actual generated frames and hardware/timing metrics. If you used
+`LTX25_MODELS` to reuse an existing folder, pass that folder to `--model`.
+Default native offload is `none` for the B200. `cpu` and `disk` in
+`runtime-ltx25.json` enable native weight streaming if needed, at a speed cost;
+these names differ from legacy Diffusers offload options. The smoke test accepts
+`--offload cpu` or `--offload disk` independently of the config.
+
+**What is implemented:** source frames are encoded into video latents, mixed
+with noise, and text-guided denoised using native model blocks. The previous
+output frame anchors the next window. Each window has 17 model frames; only the
+12 new frames are delivered, at 768 × 448. Audio is omitted, no IC-LoRA is loaded,
+and no spatial upsampler or diffusion VAE pass is used. This is an experimental
+single-stage video-to-video adaptation, not the stock two-stage quality recipe
+or a trained causal streaming system. Identity, motion, seam quality and speed
+must be assessed on the B200; a bigger GPU does not itself establish real-time
+performance. Model blocks manage their own weight lifecycle; this first version
+does not include CUDA graphs or a fully GPU-resident optimized streaming engine.
+
+The model uses a **fixed distilled schedule of up to eight steps**. The Steps
+field is disabled in Studio (ignored for this backend in workflow settings).
+Strength rounds up to the next supported starting noise level, then uses the
+remaining schedule: e.g. 0.3 → 0.421875 with one denoising step. `effective_noise`
+and `denoising_steps` are included in benchmark metrics. Strength 0 is explicit
+source passthrough and reports zero generated FPS. These controls are not
+identical to the Krea/legacy-LTX controls. Very high strength can discard source
+performance; low strength may change appearance only slightly.

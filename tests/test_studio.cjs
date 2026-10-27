@@ -9,7 +9,7 @@ function element(id) {
     getContext:()=>({drawImage(){}}), pause(){}, load(){}, removeAttribute(){}});
   return elements.get(id);
 }
-for (const [k,v] of Object.entries({prompt:'a wizard',backend:'ltx',fps:'24',steps:'7',seed:'42',strength:'.3'})) element(k).value=v;
+for (const [k,v] of Object.entries({prompt:'a wizard',backend:'ltx25',fps:'24',steps:'7',seed:'42',strength:'.3'})) element(k).value=v;
 let ws;
 class Socket {
   static OPEN=1;
@@ -24,13 +24,15 @@ vm.runInContext(fs.readFileSync(path.join(__dirname,'../studio/studio.js'),'utf8
 element('start').onclick();
 assert.equal(ws.url,'wss://pod.example/api/krea-live/ws');
 ws.onopen();
-assert.equal(ws.sent[0].settings.backend,'ltx');
+assert.equal(ws.sent[0].settings.backend,'ltx25');
 assert.equal(ws.sent[0].settings.fps,24);
 assert.equal(element('backend').disabled,true);
+assert.equal(element('steps').disabled,true);
+assert.equal(Number(element('steps').value),8);
 (async()=>{
- await ws.onmessage({data:JSON.stringify({type:'ready',gpu:'FAKE',vram_gib:32,width:512,height:320})});
- assert.equal(element('output').width,512);
- assert.equal(element('output').height,320);
+ await ws.onmessage({data:JSON.stringify({type:'ready',gpu:'FAKE',vram_gib:32,width:768,height:448})});
+ assert.equal(element('output').width,768);
+ assert.equal(element('output').height,448);
  element('stop').onclick();
  assert.equal(element('backend').disabled,false);
  console.log('Studio backend selection, proxy URL, output sizing and stop checks passed.');

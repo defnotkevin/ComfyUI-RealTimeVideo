@@ -169,7 +169,7 @@ class RealtimeSettings(KreaSettings):
     @classmethod
     def INPUT_TYPES(cls):
         fields = super().INPUT_TYPES()
-        fields['required']['backend'] = (['krea', 'ltx'],)
+        fields['required']['backend'] = (['krea', 'ltx25', 'ltx'],)
         fields['required']['fps'] = ('INT', {'default': 12, 'min': 2, 'max': 30})
         return fields
 
