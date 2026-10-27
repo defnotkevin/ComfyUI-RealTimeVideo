@@ -1,0 +1,48 @@
+"""Small, dependency-free protocol shared by ComfyUI and its GPU worker."""
+import math
+from urllib.parse import urlsplit
+
+WIDTH, HEIGHT, BLOCK = 832, 480, 12
+MAX_MESSAGE = 16 * 1024 * 1024
+MAX_FRAME = 1024 * 1024
+
+
+def settings(value):
+    if not isinstance(value, dict):
+        raise ValueError('Settings must be an object')
+    prompt = value.get('prompt', '')
+    if not isinstance(prompt, str) or not 1 <= len(prompt.strip()) <= 4000:
+        raise ValueError('Enter a prompt of 1–4000 characters')
+    strength = value.get('strength', 0.3)
+    if isinstance(strength, bool) or not isinstance(strength, (int, float)) or not math.isfinite(strength) or not 0 <= strength <= 1:
+        raise ValueError('Strength must be between 0 and 1')
+    steps = value.get('steps', 6)
+    seed = value.get('seed', 42)
+    for name, number, low, high in [('steps', steps, 2, 12), ('seed', seed, 0, 2**32 - 1)]:
+        if type(number) is not int or not low <= number <= high:
+            raise ValueError(f'{name} must be an integer from {low} to {high}')
+    return dict(prompt=prompt.strip(), strength=float(strength), steps=steps, seed=seed)
+
+
+def frames(value):
+    if not isinstance(value, list) or len(value) != BLOCK:
+        raise ValueError('Send exactly 12 frames per block')
+    if any(not isinstance(x, str) or not 1 <= len(x) <= MAX_FRAME for x in value):
+        raise ValueError('Invalid or oversized frame')
+    return value
+
+
+def same_origin(origin, host):
+    """Never trust X-Forwarded-Host supplied by a client."""
+    try:
+        p = urlsplit(origin or '')
+        return p.scheme in ('http', 'https') and p.netloc.lower() == host.lower() and not p.username and not p.password and p.path in ('', '/') and not p.query and not p.fragment
+    except ValueError:
+        return False
+
+
+def padded_blocks(sequence):
+    for offset in range(0, len(sequence), BLOCK):
+        part = list(sequence[offset:offset + BLOCK])
+        valid = len(part)
+        yield part + [part[-1]] * (BLOCK - valid), valid

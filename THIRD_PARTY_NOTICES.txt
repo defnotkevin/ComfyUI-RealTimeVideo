@@ -1,0 +1,28 @@
+THIRD-PARTY ATTRIBUTION — ComfyUI-RealTimeVideo
+
+Our extension code is MIT (LICENSE). This does not relicense downloaded
+models, libraries, ComfyUI or demo media. This is an independent integration,
+not an official Krea, Comfy or Higgsfield product.
+
+Krea Realtime Video: https://huggingface.co/krea/krea-realtime-video
+Revision: 9a2ceea280e5d584c6a28d384a9c19e38c810f8c
+The model card declares Apache-2.0. Credit Krea for the distilled streaming
+model and inference techniques; these are not inventions of this extension.
+
+Wan: https://huggingface.co/Wan-AI/Wan2.1-T2V-14B-Diffusers
+Revision: 38ec498cb3208fb688890f8cc7e94ede2cbd7f68
+The model card declares Apache-2.0. Credit Wan and the component authors.
+
+The installer retains matching root LICENSE, NOTICE and COPYING files
+where present, model cards, and copyright headers in downloaded sources.
+Preserve these when redistributing artifacts. The installed modular model
+index is modified to use local paths; weights are not modified. Models and
+runtime environments are excluded from this extension repository.
+
+Runtime libraries retain their own licenses. Direct versions appear in
+requirements-worker.txt; runtime-freeze.txt records installed dependencies.
+The separately licensed legacy krea-ai/realtime-video GitHub server is not
+vendored or installed. Its license must be checked separately if used later.
+
+Demo media requires separate rights. Model licenses do not grant permission
+to use someone's likeness, copyrighted footage, music or branded characters.

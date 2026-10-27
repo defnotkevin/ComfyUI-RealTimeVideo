@@ -1,0 +1,17 @@
+.runtime/
+models/
+runtime.json
+runtime-freeze.txt
+worker.log
+__pycache__/
+*.pyc
+.pytest_cache/
+benchmark-output/
+*.env*
+*.env.local
+.env*
+.env
+.env.local
+SUBMISSION_CHECKLIST.txt
+*.cache/*
+*.DS_Store*

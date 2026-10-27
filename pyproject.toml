@@ -1,0 +1,9 @@
+[project]
+name = "comfyui-realtimevideo"
+version = "0.1.0"
+description = "ComfyUI nodes and browser studio for Krea streaming video-to-video"
+requires-python = ">=3.10"
+license = "MIT"
+
+[tool.comfy]
+DisplayName = "Krea Realtime Video"

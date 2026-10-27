@@ -1,0 +1,112 @@
+{
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "KreaRTSettings",
+      "pos": [
+        30,
+        100
+      ],
+      "size": [
+        360,
+        220
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "KREA_SETTINGS",
+          "type": "KREA_SETTINGS",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KreaRTSettings"
+      },
+      "widgets_values": [
+        "A cinematic portrait of a wizard, glowing magical sparks around their hands, an ancient stone hall in the background.",
+        0.3,
+        6,
+        42
+      ]
+    },
+    {
+      "id": 2,
+      "type": "KreaRTLiveStudio",
+      "pos": [
+        450,
+        100
+      ],
+      "size": [
+        360,
+        220
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "settings",
+          "type": "KREA_SETTINGS",
+          "link": 1
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "KreaRTLiveStudio"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 3,
+      "type": "Note",
+      "pos": [
+        30,
+        380
+      ],
+      "size": [
+        360,
+        220
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Note"
+      },
+      "widgets_values": [
+        "1. Queue this workflow once to pass settings to the studio.\n2. Click Open Live Studio on the Krea node.\n3. Enable camera or open a video, then Start generation.\n4. Edit prompt/strength and Apply on next block.\nStop closes the camera and releases the worker.\nInstall the GPU runtime first; see README.md."
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "KREA_SETTINGS"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.85,
+      "offset": [
+        30,
+        50
+      ]
+    }
+  },
+  "version": 0.4
+}

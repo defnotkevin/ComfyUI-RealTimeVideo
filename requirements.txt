@@ -1,0 +1,2 @@
+# ComfyUI already supplies torch, numpy, Pillow and aiohttp.
+# GPU model dependencies belong in the isolated worker: scripts/install_runtime.sh
