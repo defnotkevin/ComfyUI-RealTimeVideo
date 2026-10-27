@@ -47,6 +47,12 @@ bash scripts/install_runtime.sh
 
 The installer writes `runtime.json` with absolute paths. Re-run it after moving environments/model folders. It downloads only the Krea transformer/code and Wan text encoder, tokenizer, VAE and scheduler, using fixed repository revisions. No model downloads occur merely by starting ComfyUI.
 
+The installer disables the optional `HF_HUB_ENABLE_HF_TRANSFER` flag inherited
+from some GPU container images. Installing `hf_transfer` with the container's
+global `pip` does not install it in `.runtime`. If an older copy fails with
+this error, retry using `HF_HUB_ENABLE_HF_TRANSFER=0 bash scripts/install_runtime.sh`.
+The pip update notice is informational; it is not the cause of that failure.
+
 If Hugging Face authentication is required, authenticate privately on the GPU host using its CLI. Never put tokens in workflows or browser fields. The installer uses Hugging Face's normal cached authentication.
 
 Restart ComfyUI after copying the extension. Keep ComfyUI behind your existing authenticated HTTPS proxy. Use a regular Chrome/Edge window if an embedded browser blocks camera permission. HTTPS or localhost is necessary for browser camera access.

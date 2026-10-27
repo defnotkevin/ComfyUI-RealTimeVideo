@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -12,6 +13,10 @@ WAN_REV = '38ec498cb3208fb688890f8cc7e94ede2cbd7f68'
 
 
 def main():
+    # RunPod images may enable hf_transfer in their global Python environment.
+    # Our isolated runtime does not require it. Hub reads this flag on import,
+    # so override it before importing Hub, including when this script runs directly.
+    os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '0'
     from huggingface_hub import snapshot_download
     parser = argparse.ArgumentParser()
     parser.add_argument('--directory', type=Path, required=True)

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Use the runtime's normal Hub downloader, not a host-only optional accelerator.
+export HF_HUB_ENABLE_HF_TRANSFER=0
 NODE_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${KREA_INSTALL_PYTHON:-python3.11}"
 RUNTIME_DIR="${KREA_VENV:-$NODE_ROOT/.runtime}"

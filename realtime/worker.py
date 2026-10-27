@@ -12,6 +12,7 @@ from pathlib import Path
 # Executable script, not a ComfyUI module import.
 sys.path.insert(0, str(Path(__file__).parent))
 from protocol import WIDTH, HEIGHT, MAX_MESSAGE, settings, frames
+from model_code import load_transformer_class
 
 
 class Engine:
@@ -24,14 +25,15 @@ class Engine:
 
     def load(self):
         import torch
-        from diffusers import ModularPipeline, AutoModel
+        from diffusers import ModularPipeline
         if not torch.cuda.is_available():
             raise RuntimeError('An NVIDIA CUDA GPU is required; no CPU fallback is enabled.')
         self.torch = torch
         self.pipe = ModularPipeline.from_pretrained(self.model, trust_remote_code=True, local_files_only=True)
-        # Diffusers 0.36 custom-code loading does not resolve local subfolders.
-        # Load the transformer directly from its folder, then inject it.
-        transformer = AutoModel.from_pretrained(str(Path(self.model) / 'transformer'), trust_remote_code=True, local_files_only=True, device_map='cuda', torch_dtype=torch.bfloat16, use_safetensors=True)
+        # Import the complete installed package rather than copying individual
+        # modules into Diffusers' shared local cache.
+        model_class = load_transformer_class(self.model)
+        transformer = model_class.from_pretrained(str(Path(self.model) / 'transformer'), local_files_only=True, device_map='cuda', torch_dtype=torch.bfloat16, use_safetensors=True)
         self.pipe.update_components(transformer=transformer)
         self.pipe.load_components(names=['text_encoder', 'tokenizer', 'vae', 'scheduler'], local_files_only=True, device_map='cuda', torch_dtype={'default': torch.bfloat16, 'vae': torch.float16})
         for name in ('transformer', 'text_encoder', 'tokenizer', 'vae', 'scheduler'):
