@@ -81,6 +81,17 @@ class RouteTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(WSServerHandshakeError):
             await self.client.ws_connect('/krea-live/ws')
 
+    async def test_explicit_proxy_origin(self):
+        with patch.dict('os.environ', {'KREA_PUBLIC_ORIGIN': 'https://pod.example'}):
+            ws = await self.client.ws_connect('/krea-live/ws', headers={'Origin': 'https://pod.example'})
+            await self.start(ws)
+            await ws.close()
+            for origin in ['https://evil.example', 'http://pod.example', self.origin]:
+                with self.assertRaises(WSServerHandshakeError) as exc:
+                    await self.client.ws_connect('/krea-live/ws', headers={
+                        'Origin': origin, 'X-Forwarded-Host': 'pod.example'})
+                self.assertEqual(exc.exception.status, 403)
+
     async def test_exclusive_owner(self):
         first = await self.connect()
         second = await self.connect()

@@ -41,6 +41,23 @@ def same_origin(origin, host):
         return False
 
 
+def allowed_origin(origin, host, public_origin=''):
+    """An explicit public origin pins access when a reverse proxy rewrites Host.
+
+    Forwarded headers are intentionally never used as an authorization source.
+    """
+    if not public_origin:
+        return same_origin(origin, host)
+    try:
+        expected = urlsplit(public_origin)
+        if not same_origin(public_origin, expected.netloc):
+            return False
+        actual = urlsplit(origin or '')
+        return same_origin(origin, expected.netloc) and actual.scheme == expected.scheme
+    except ValueError:
+        return False
+
+
 def padded_blocks(sequence):
     for offset in range(0, len(sequence), BLOCK):
         part = list(sequence[offset:offset + BLOCK])

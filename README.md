@@ -133,3 +133,21 @@ The appearance, VFX and background controls build one prompt. They are not indep
 - Diffusers 0.36.0, PyTorch 2.8.0/CUDA 12.8, Transformers 4.57.1. Direct worker dependencies are pinned in `requirements-worker.txt`; the installer records resolved transitive versions in `runtime-freeze.txt`.
 
 Extension code is MIT. Downloaded model weights, code and dependencies keep their own licenses. The Hugging Face Krea model card identifies Apache-2.0; review its pinned model card and the Wan component terms for your use. This package does not vendor the separate legacy Krea GitHub server.
+
+### Reverse-proxy WebSocket origin configuration
+
+If Studio opens but Start reports a connection failure and ComfyUI logs an origin
+rejection, the reverse proxy may rewrite the Host header. Set `KREA_PUBLIC_ORIGIN`
+in the **ComfyUI server process** to the exact browser origin (scheme and hostname,
+plus port if present; no path, `/api`, query string or token), then restart ComfyUI:
+
+```bash
+export KREA_PUBLIC_ORIGIN='https://YOUR-POD-8188.proxy.runpod.net'
+# Start ComfyUI with your usual command in this same shell.
+```
+
+This explicitly pins the accepted browser origin; arbitrary forwarded headers and
+other origins remain rejected. Update it if the pod URL changes. The `/api/` prefix
+is supported by the relative Studio WebSocket URL. No installer rerun or model
+download is required for this configuration. Origin rejection occurs before the
+worker starts, so it appears in ComfyUI's log rather than `worker.log`.

@@ -139,7 +139,7 @@ $('start').onclick = () => {
                 if (msg.type === 'reset') { busy = false; inputs = []; outputs = []; $('reset').disabled = false; status('Temporal context reset.'); }
             } catch (error) { stop(error.message); }
         };
-        current.onerror = () => { if (epoch === generation) stop('Connection failed. Check ComfyUI, the proxy and worker.log.'); };
+        current.onerror = () => { if (epoch === generation) stop('WebSocket connection failed before generation. Check the ComfyUI log for an origin rejection; behind a proxy, configure KREA_PUBLIC_ORIGIN to match this page’s origin. Also check proxy WebSocket support.'); };
         current.onclose = () => { if (epoch === generation) stop('Server disconnected. Check worker.log and restart the session.'); };
     } catch (error) { status(error.message); }
 };

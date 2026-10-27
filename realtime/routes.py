@@ -1,11 +1,13 @@
 import asyncio
 import contextlib
 import json
+import logging
+import os
 from pathlib import Path
 from aiohttp import web, WSMsgType
 from server import PromptServer
 from .manager import manager
-from .protocol import MAX_MESSAGE, frames, settings, same_origin
+from .protocol import MAX_MESSAGE, frames, settings, allowed_origin
 
 STUDIO = Path(__file__).resolve().parents[1] / 'studio'
 routes = PromptServer.instance.routes
@@ -28,8 +30,10 @@ async def studio_css(request):
 
 @routes.get('/krea-live/ws')
 async def stream(request):
-    if not same_origin(request.headers.get('Origin'), request.host):
-        raise web.HTTPForbidden(text='Krea requires a same-origin browser connection.')
+    if not allowed_origin(request.headers.get('Origin'), request.host, os.environ.get('KREA_PUBLIC_ORIGIN', '')):
+        logging.warning('Krea WebSocket rejected: browser origin does not match host/public origin. '
+                        'Behind a proxy, set KREA_PUBLIC_ORIGIN to the exact Studio origin before starting ComfyUI.')
+        raise web.HTTPForbidden(text='Krea origin rejected. Configure KREA_PUBLIC_ORIGIN on the ComfyUI process for your proxy.')
     ws = web.WebSocketResponse(max_msg_size=MAX_MESSAGE, heartbeat=30, receive_timeout=120)
     await ws.prepare(request)
     try:
@@ -54,6 +58,7 @@ async def stream(request):
                 response = await asyncio.to_thread(manager.call, command)
                 await ws.send_json({'type': 'frames' if command['op'] == 'block' else 'reset', **response})
         except Exception as exc:
+            logging.exception('Krea streaming worker failed')
             ready = False
             if not ws.closed:
                 await ws.send_json({'type': 'error', 'message': str(exc)})
