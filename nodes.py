@@ -68,7 +68,7 @@ class KreaVideoToVideo:
             # The separate worker is not visible to ComfyUI's VRAM accounting.
             mm.unload_all_models()
             mm.soft_empty_cache()
-            manager.start()
+            manager.start(config["backend"])
             manager.call({'op': 'reset', 'settings': config})
             generated, metrics = [], []
             progress = ProgressBar((len(images) + 11) // 12)
@@ -163,3 +163,15 @@ class KreaLoadClip:
 
 NODE_CLASS_MAPPINGS = {'KreaRTLoadClip': KreaLoadClip, 'KreaRTSettings': KreaSettings, 'KreaRTLiveStudio': KreaLiveStudio, 'KreaRTVideoToVideo': KreaVideoToVideo}
 NODE_DISPLAY_NAME_MAPPINGS = {'KreaRTLoadClip': 'Krea · Load Video Clip (30s max)', 'KreaRTSettings': 'Krea · Prompt & Settings', 'KreaRTLiveStudio': 'Krea · Live Camera Studio', 'KreaRTVideoToVideo': 'Krea · Streaming Video to Video'}
+
+
+class RealtimeSettings(KreaSettings):
+    @classmethod
+    def INPUT_TYPES(cls):
+        fields = super().INPUT_TYPES()
+        fields['required']['backend'] = (['krea', 'ltx'],)
+        fields['required']['fps'] = ('INT', {'default': 12, 'min': 2, 'max': 30})
+        return fields
+
+NODE_CLASS_MAPPINGS['RTVideoSettings'] = RealtimeSettings
+NODE_DISPLAY_NAME_MAPPINGS['RTVideoSettings'] = 'Realtime Video · Backend & Settings'

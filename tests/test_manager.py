@@ -43,6 +43,14 @@ for line in sys.stdin:
         self.manager.shutdown()
         self.assertIsNotNone(process.poll())
 
+    def test_ltx_runtime_is_separate(self):
+        (self.root / 'model/model_index.json').write_text('{}')
+        config = self.root / 'runtime-ltx.json'
+        config.write_text(json.dumps({'python': sys.executable, 'model': str(self.root / 'model'), 'offload': 'model'}))
+        with patch.dict(os.environ, {'LTX_RUNTIME_CONFIG': str(config)}):
+            self.assertEqual(self.manager.start('ltx')['op'], 'load')
+            self.assertEqual(self.manager.process.args[-1], 'ltx')
+
     def test_timeout_terminates(self):
         self.manager.start()
         process = self.manager.process

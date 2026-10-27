@@ -26,3 +26,11 @@ vendored or installed. Its license must be checked separately if used later.
 
 Demo media requires separate rights. Model licenses do not grant permission
 to use someone's likeness, copyrighted footage, music or branded characters.
+
+Optional LTX backend:
+Official model: https://huggingface.co/Lightricks/LTX-Video-0.9.7-distilled
+Pinned revision: 057509edea1493cae5e62e9d8f780ebda3fb4333
+Model license: LTX-Video-Open-Weights-License-0.X.txt in that repository (downloaded alongside weights).
+Weights are not distributed in this repository. The model's license is separate
+from this project's MIT license. Inference uses the existing pinned Diffusers
+0.36.0 dependency and its LTXConditionPipeline; no Reactor service/code is used.

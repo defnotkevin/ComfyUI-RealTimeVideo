@@ -33,3 +33,8 @@ render = node(3, 'KreaRTVideoToVideo', [460, 120], inputs=[socket('images', 'IMA
 savevideo = node(4, 'SaveWEBM', [890, 120], inputs=[socket('images', 'IMAGE', 3), {'name': 'fps', 'type': 'FLOAT', 'link': 4, 'widget': {'name': 'fps'}}], widgets=['Krea/clip', 'vp9', 12.0, 24.0])
 note = node(5, 'Note', [460, 400], widgets=['Put a video in ComfyUI/input, refresh, and select it in Load Video Clip.\nStart with 5 seconds. Maximum: 30 seconds at 12 fps.\nThe source is center-cropped to 832 × 480. Output is silent.\nStop Live Studio before running this workflow.\nSaveWEBM is a ComfyUI core node; update ComfyUI if missing.'])
 save('02-video-to-video.json', [config, clip, render, savevideo, note], [[1, 1, 0, 3, 1, 'KREA_SETTINGS'], [2, 2, 0, 3, 0, 'IMAGE'], [3, 3, 0, 4, 0, 'IMAGE'], [4, 2, 1, 4, 1, 'FLOAT']])
+
+config = node(1, 'RTVideoSettings', [30, 100], outputs=[socket('KREA_SETTINGS', 'KREA_SETTINGS', links=[1])], widgets=[prompt, 0.3, 7, 42, 'ltx', 12])
+live = node(2, 'KreaRTLiveStudio', [450, 100], inputs=[socket('settings', 'KREA_SETTINGS', 1)], title='Realtime Video · Open Studio')
+note = node(3, 'Note', [30, 380], widgets=['Install scripts/install_ltx_runtime.sh on the GPU host first. Queue once, then open Live Studio. LTX uses experimental 512x320 video-conditioned chunks, with a previous-frame anchor. It is not a causal streaming model. Switch back to Krea after stopping. GPU speed and continuity require testing.'])
+save('03-ltx-live-camera.json', [config, live, note], [[1, 1, 0, 2, 0, 'KREA_SETTINGS']])

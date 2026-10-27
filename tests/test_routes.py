@@ -24,7 +24,8 @@ class FakeManager:
     def acquire(self):
         if not self.lock.acquire(False):
             raise RuntimeError('busy')
-    def start(self):
+    def start(self, backend="krea"):
+        self.backend = backend
         return {'gpu': 'TEST FAKE', 'vram_gib': 0}
     def call(self, command):
         self.commands.append(command)
@@ -70,6 +71,17 @@ class RouteTests(unittest.IsolatedAsyncioTestCase):
         await ws.send_json({'op': 'stop'})
         await ws.receive()
         self.assertTrue(self.fake.stopped.is_set())
+        self.assertFalse(self.fake.lock.locked())
+
+    async def test_ltx_selection_and_mid_session_switch_denied(self):
+        ws = await self.connect()
+        await ws.send_json({'op': 'start', 'settings': {'prompt': 'test', 'backend': 'ltx'}})
+        self.assertEqual((await ws.receive_json())['type'], 'loading')
+        self.assertEqual((await ws.receive_json())['type'], 'ready')
+        self.assertEqual(self.fake.backend, 'ltx')
+        await ws.send_json({'op': 'reset', 'settings': {'prompt': 'test', 'backend': 'krea'}})
+        self.assertIn('switching backend', (await ws.receive_json())['message'])
+        await ws.receive()
         self.assertFalse(self.fake.lock.locked())
 
     async def test_foreign_origin_denied(self):

@@ -100,7 +100,14 @@ class Engine:
 
 def main():
     transport = sys.stdout
-    engine = Engine(sys.argv[1])
+    backend = sys.argv[2] if len(sys.argv) > 2 else 'krea'
+    if backend == 'ltx':
+        from ltx_worker import LTXEngine
+        engine = LTXEngine(sys.argv[1])
+    elif backend == 'krea':
+        engine = Engine(sys.argv[1])
+    else:
+        raise ValueError('Unknown backend')
     while True:
         line = sys.stdin.readline(MAX_MESSAGE + 1)
         if not line:

@@ -15,3 +15,8 @@ benchmark-output/
 SUBMISSION_CHECKLIST.txt
 *.cache/*
 *.DS_Store*
+
+.runtime-ltx/
+runtime-ltx.json
+runtime-ltx-freeze.txt
+benchmark-ltx/

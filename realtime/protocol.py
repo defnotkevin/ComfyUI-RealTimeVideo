@@ -10,6 +10,12 @@ MAX_FRAME = 1024 * 1024
 def settings(value):
     if not isinstance(value, dict):
         raise ValueError('Settings must be an object')
+    backend = value.get('backend', 'krea')
+    if backend not in ('krea', 'ltx'):
+        raise ValueError('Backend must be krea or ltx')
+    fps = value.get('fps', 12)
+    if type(fps) is not int or not 2 <= fps <= 30:
+        raise ValueError('FPS must be an integer from 2 to 30')
     prompt = value.get('prompt', '')
     if not isinstance(prompt, str) or not 1 <= len(prompt.strip()) <= 4000:
         raise ValueError('Enter a prompt of 1–4000 characters')
@@ -21,7 +27,7 @@ def settings(value):
     for name, number, low, high in [('steps', steps, 2, 12), ('seed', seed, 0, 2**32 - 1)]:
         if type(number) is not int or not low <= number <= high:
             raise ValueError(f'{name} must be an integer from {low} to {high}')
-    return dict(prompt=prompt.strip(), strength=float(strength), steps=steps, seed=seed)
+    return dict(prompt=prompt.strip(), strength=float(strength), steps=steps, seed=seed, backend=backend, fps=fps)
 
 
 def frames(value):

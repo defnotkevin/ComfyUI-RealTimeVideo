@@ -29,22 +29,29 @@ class WorkerManager:
         self.shutdown()
         self.lease.release()
 
-    def start(self):
-        config_path = Path(os.environ.get('KREA_RUNTIME_CONFIG', ROOT / 'runtime.json'))
+    def start(self, backend="krea"):
+        if backend not in ("krea", "ltx"):
+            raise ValueError("Unknown backend")
+        config_path = Path(os.environ.get('LTX_RUNTIME_CONFIG' if backend == 'ltx' else 'KREA_RUNTIME_CONFIG', ROOT / ('runtime-ltx.json' if backend == 'ltx' else 'runtime.json')))
         if not config_path.is_file():
-            raise RuntimeError('Krea runtime is not installed. Follow README.md and run scripts/install_runtime.sh on the GPU host.')
+            raise RuntimeError(f'{backend} runtime is not installed. Run scripts/install_ltx_runtime.sh for LTX or scripts/install_runtime.sh for Krea.')
         config = json.loads(config_path.read_text())
         python = Path(config['python'])
         model = Path(config['model'])
-        if not python.is_file() or not (model / 'modular_model_index.json').is_file():
+        if not python.is_file() or not (model / ('model_index.json' if backend == 'ltx' else 'modular_model_index.json')).is_file():
             raise RuntimeError('Runtime paths are missing. Re-run the installer on this host.')
         env = os.environ.copy()
+        if backend == 'ltx':
+            mode = config.get('offload', 'model')
+            if mode not in ('model', 'sequential', 'none'):
+                raise ValueError('LTX offload must be model, sequential or none')
+            env['LTX_OFFLOAD'] = mode
         env.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', DIFFUSERS_ENABLE_HUB_KERNELS='0', PYTHONUNBUFFERED='1', TOKENIZERS_PARALLELISM='false')
         with self.lifecycle:
             if self.cancelled.is_set():
                 raise RuntimeError('Session cancelled')
             self.log = (ROOT / 'worker.log').open('w', encoding='utf-8')
-            self.process = subprocess.Popen([str(python), '-u', str(ROOT / 'realtime/worker.py'), str(model)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.log, text=True, env=env, bufsize=1)
+            self.process = subprocess.Popen([str(python), '-u', str(ROOT / 'realtime/worker.py'), str(model), backend], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.log, text=True, env=env, bufsize=1)
         responses = queue.Queue(maxsize=2)
         self.responses = responses
         process = self.process

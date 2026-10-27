@@ -44,13 +44,14 @@ async def stream(request):
         return ws
     job = None
     ready = False
+    session_backend = None
 
     async def work(command):
         nonlocal ready
         try:
             if command['op'] == 'start':
-                await ws.send_json({'type': 'loading', 'message': 'Loading Krea on GPU. First load and kernel compilation can take several minutes.'})
-                info = await asyncio.to_thread(manager.start)
+                await ws.send_json({'type': 'loading', 'message': f"Loading {command['settings']['backend'].upper()} on GPU. First load can take several minutes."})
+                info = await asyncio.to_thread(manager.start, command['settings']['backend'])
                 await asyncio.to_thread(manager.call, {'op': 'reset', 'settings': command['settings']})
                 ready = True
                 await ws.send_json({'type': 'ready', **info})
@@ -78,8 +79,11 @@ async def stream(request):
                 raise ValueError('Only one request may be in flight')
             if op == 'start' and not ready:
                 command = {'op': op, 'settings': settings(value.get('settings'))}
+                session_backend = command['settings']['backend']
             elif op in ('block', 'reset') and ready:
                 command = {'op': op, 'settings': settings(value.get('settings'))}
+                if command['settings']['backend'] != session_backend:
+                    raise ValueError('Stop the session before switching backend')
                 if op == 'block':
                     command['frames'] = frames(value.get('frames'))
             else:

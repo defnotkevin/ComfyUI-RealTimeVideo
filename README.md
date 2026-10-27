@@ -151,3 +151,66 @@ other origins remain rejected. Update it if the pod URL changes. The `/api/` pre
 is supported by the relative Studio WebSocket URL. No installer rerun or model
 download is required for this configuration. Origin rejection occurs before the
 worker starts, so it appears in ComfyUI's log rather than `worker.log`.
+
+### LTX backend (experimental, self-hosted)
+
+Krea remains the default. Live Studio now has a **Backend** selector, and
+`workflows/03-ltx-live-camera.json` prepares LTX settings. Stop generation before
+switching; one worker owns the GPU at a time. Existing Krea workflows and its
+runtime remain compatible. The `RTVideoSettings` node can also feed the existing
+batch renderer; use the clip loader's FPS as the settings FPS.
+
+The initial LTX backend uses **Lightricks/LTX-Video-0.9.7-distilled (13B)**, pinned
+at `057509edea1493cae5e62e9d8f780ebda3fb4333`. It is **not LTX-2.5**, a Reactor
+integration, or a causal streaming checkpoint. It conditions 17-frame windows on
+incoming video and the last generated frame; it delivers 12 new frames per call.
+The remaining frames are an anchor and padding. This is an experimental continuity
+heuristic and may flicker, drift, or fail to preserve identity. Output is silent,
+512 × 320; it is not stretched to the Krea resolution in Studio. The text prompt
+embeddings are cached until the prompt changes. Strength maps inversely to LTX's
+source-conditioning strength; it is not identical to Krea's denoising strength.
+
+Install **on the Linux GPU host**, after pulling your pushed changes:
+
+```bash
+cd /workspace/ComfyUI/custom_nodes/ComfyUI-RealTimeVideo
+bash scripts/install_ltx_runtime.sh
+```
+
+This creates `.runtime-ltx`, `runtime-ltx.json`, and `models/ltx`, independently
+of Krea. It downloads pinned safetensors and tokenizer/config files, not remote
+Python code. Model licensing is separate from this node pack's MIT license;
+review the official model license before using/distributing its weights.
+No model downloads occur during ComfyUI startup or generation.
+
+Restart ComfyUI with your existing `KREA_PUBLIC_ORIGIN` setting, refresh Studio,
+select **LTX**, and begin with **12 capture FPS, 7 steps, strength 0.3**. Capture
+FPS is a sampling target, not a generation-speed promise. `Generated frames/sec`
+counts the 12 delivered frames, including inference/prompt-encoding time but
+excluding network and JPEG encoding; it excludes the five discarded model frames.
+
+First run a repeatable smoke test (replace the image path with a real file):
+
+```bash
+.runtime-ltx/bin/python scripts/smoke_gpu.py \
+  --backend ltx --model models/ltx \
+  --image /workspace/ComfyUI/input/test.png --output benchmark-ltx
+```
+
+This saves three blocks of actual output and `benchmark-ltx/metrics.json`. The
+still-image test establishes execution and cold/warm throughput, not motion
+fidelity. Then test camera movement and inspect transitions between chunks.
+No GPU inference, real-time rate, or 5090 fit is claimed by local CPU tests.
+
+Default `offload: model` in `runtime-ltx.json` moves complete components between
+CPU and GPU; it avoids placing the text encoder and transformer on GPU together.
+Allow substantial system RAM for the BF16 weights (64 GB or more is a sensible
+starting allocation, not a measured minimum). If the 5090 still runs out of VRAM,
+set `offload` to `sequential` in that file, stop/start the Studio session, and retry.
+This moves smaller modules and may be much slower. The smoke test takes
+`--offload sequential` independently of the config file. A larger GPU can use
+`offload: none`, after memory has been checked. Do not alter the Krea config.
+
+Read `worker.log` immediately after a failure; the next session overwrites it.
+The same origin protection applies to both backends. No new exposed worker port
+or third-party inference service is introduced.

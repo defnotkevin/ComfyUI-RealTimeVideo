@@ -32,3 +32,20 @@ bash -n scripts/install_runtime.sh
 ```
 
 The GPU installation and smoke test are documented in README.md. Model-dependent API validation uses `scripts/check_model_api.py`; GPU inference uses `scripts/smoke_gpu.py`.
+
+## LTX backend addition — 2026-10-27
+
+- 31 CPU tests pass, including Krea regression coverage, LTX window padding and
+  anchor trimming, prompt-cache invalidation, seed reset, input validation,
+  separate-runtime selection, and rejection of backend changes during a session.
+- `node tests/test_studio.cjs` passes (DOM/WebSocket doubles): LTX selection,
+  `/api/`-prefixed WebSocket URL, native output dimensions, and stop/unlock behavior.
+- `node --check studio/studio.js`, `bash -n scripts/install_ltx_runtime.sh`, and
+  `git diff --check` pass.
+- Actual installed Diffusers 0.36.0 imports and LTX pipeline signatures checked
+  in the local compatibility environment. LTXVideoCondition is imported from
+  `diffusers.pipelines.ltx.pipeline_ltx_condition`, not the package root.
+- GPU inference and the model installer have NOT been executed locally. No model
+  weights were downloaded locally. 5090 memory fit, FPS, motion fidelity, and
+  inter-window consistency remain unverified. Use the documented LTX GPU smoke
+  test, then live video. Fake-inference tests do not validate generated quality.

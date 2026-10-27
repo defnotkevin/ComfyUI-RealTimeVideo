@@ -6,7 +6,7 @@ let inputs = [], outputs = [], dropped = 0, sentAt = 0, active, recorder, record
 let generation = 0;
 const status = message => { $('status').textContent = message; };
 function readSettings() {
-    const value = {prompt: $('prompt').value.trim(), strength: Number($('strength').value), steps: Number($('steps').value), seed: Number($('seed').value)};
+    const value = {backend: $('backend').value, fps: Number($('fps').value), prompt: $('prompt').value.trim(), strength: Number($('strength').value), steps: Number($('steps').value), seed: Number($('seed').value)};
     if (!value.prompt || value.prompt.length > 4000) throw Error('Enter a prompt of 1–4000 characters.');
     if (!Number.isInteger(value.steps) || value.steps < 2 || value.steps > 12) throw Error('Steps must be 2–12.');
     if (!Number.isInteger(value.seed) || value.seed < 0 || value.seed > 4294967295) throw Error('Invalid seed.');
@@ -15,7 +15,7 @@ function readSettings() {
 try {
     if (location.hash.length > 1) {
         const initial = JSON.parse(decodeURIComponent(location.hash.slice(1)));
-        for (const key of ['prompt', 'strength', 'steps', 'seed']) if (initial[key] !== undefined) $(key).value = initial[key];
+        for (const key of ['prompt', 'strength', 'steps', 'seed', 'backend', 'fps']) if (initial[key] !== undefined) $(key).value = initial[key];
         history.replaceState(null, '', location.pathname + location.search);
     }
 } catch { status('Could not read workflow settings; using defaults.'); }
@@ -35,6 +35,7 @@ function toggle(running) {
     $('camera').disabled = running;
     $('video-file').disabled = running;
     $('fps').disabled = running;
+    $('backend').disabled = running;
     $('reset').disabled = !ready;
     $('record').disabled = !ready;
 }
@@ -121,10 +122,12 @@ $('start').onclick = () => {
                 if (msg.type === 'error') { stop(msg.message); return; }
                 if (msg.type === 'ready') {
                     ready = true; busy = false; toggle(true);
-                    $('gpu').textContent = `${msg.gpu} · ${msg.vram_gib} GiB`;
-                    status('Streaming. Waiting for the first generated block; kernel compilation may take several minutes.');
+                    output.width = msg.width || 832; output.height = msg.height || 480;
+                    output.style.aspectRatio = `${output.width}/${output.height}`;
+                    $('gpu').textContent = `${active.backend.toUpperCase()} · ${msg.gpu} · ${msg.vram_gib} GiB`;
+                    status(active.backend === 'ltx' ? 'LTX experimental chunks: waiting for first output. Speed and continuity are not guaranteed.' : 'Streaming. Waiting for the first generated block; kernel compilation may take several minutes.');
                     timer = setInterval(sample, 1000 / fps);
-                    playbackTimer = setInterval(() => { const frame = outputs.shift(); if (frame) out.drawImage(frame, 0, 0, 832, 480); }, 1000 / fps);
+                    playbackTimer = setInterval(() => { const frame = outputs.shift(); if (frame) out.drawImage(frame, 0, 0, output.width, output.height); }, 1000 / fps);
                 }
                 if (msg.type === 'frames') {
                     $('render-fps').textContent = msg.generated_fps.toFixed(1);
@@ -163,7 +166,7 @@ $('record').onclick = () => {
         };
         recorder.onstop = () => {
             const url = URL.createObjectURL(new Blob(recording, {type: mimeType}));
-            const link = document.createElement('a'); link.href = url; link.download = `krea-live-${Date.now()}.webm`; link.click();
+            const link = document.createElement('a'); link.href = url; link.download = `${active.backend}-live-${Date.now()}.webm`; link.click();
             setTimeout(() => URL.revokeObjectURL(url), 10000); stream.getTracks().forEach(track => track.stop());
             recording = []; $('record').textContent = 'Record output';
         };
